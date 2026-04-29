@@ -2,6 +2,7 @@ import type {
   DeployContext,
   DeploymentData,
   DeployStatus,
+  LogLine,
   NetlifyAccountInfo,
   NetlifyBandwidthData,
   NetlifyFormData,
@@ -90,14 +91,8 @@ function mapNetlifyContext(context: string | undefined): DeployContext {
   return "branch";
 }
 
-export async function fetchNetlifyDeploys(token: string, limit = 10): Promise<DeploymentData[]> {
-  const res = await fetch(`${BASE}/deploys?per_page=${limit}`, {
-    headers: headers(token),
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`netlify deploys ${res.status}`);
-  const deploys = (await res.json()) as NetlifyDeploy[];
-  return deploys.map((d) => ({
+function mapNetlifyDeploy(d: NetlifyDeploy): DeploymentData {
+  return {
     id: d.id,
     project: d.name ?? "",
     status: mapNetlifyState(d.state),
@@ -108,7 +103,17 @@ export async function fetchNetlifyDeploys(token: string, limit = 10): Promise<De
     url: d.deploy_url ?? d.ssl_url ?? d.url ?? "",
     provider: "netlify" as const,
     context: mapNetlifyContext(d.context),
-  }));
+  };
+}
+
+export async function fetchNetlifyDeploys(token: string, limit = 10): Promise<DeploymentData[]> {
+  const res = await fetch(`${BASE}/deploys?per_page=${limit}`, {
+    headers: headers(token),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`netlify deploys ${res.status}`);
+  const deploys = (await res.json()) as NetlifyDeploy[];
+  return deploys.map(mapNetlifyDeploy);
 }
 
 export async function fetchNetlifyBuildMinutesMonthly(token: string): Promise<number> {
@@ -270,4 +275,62 @@ export async function fetchNetlifyBandwidth(token: string): Promise<NetlifyBandw
   } catch {
     return { available: false };
   }
+}
+
+export async function fetchNetlifyDeployment(token: string, id: string): Promise<DeploymentData> {
+  const res = await fetch(`${BASE}/deploys/${encodeURIComponent(id)}`, {
+    headers: headers(token),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`netlify deploy ${res.status}`);
+  const raw = (await res.json()) as NetlifyDeploy;
+  return mapNetlifyDeploy(raw);
+}
+
+interface NetlifyLogAccessAttributes {
+  type?: string;
+  url?: string;
+}
+
+interface NetlifyDeployWithLogAccess extends NetlifyDeploy {
+  log_access_attributes?: NetlifyLogAccessAttributes;
+}
+
+export interface NetlifyLogResult {
+  lines: LogLine[];
+  unavailable?: "logflow" | "missing";
+}
+
+function inferNetlifyLevel(text: string): LogLine["level"] {
+  if (/error|fail/i.test(text)) return "error";
+  if (/warn/i.test(text)) return "warn";
+  return "info";
+}
+
+export async function fetchNetlifyDeployLog(token: string, id: string): Promise<NetlifyLogResult> {
+  const res = await fetch(`${BASE}/deploys/${encodeURIComponent(id)}`, {
+    headers: headers(token),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`netlify deploy ${res.status}`);
+  const raw = (await res.json()) as NetlifyDeployWithLogAccess;
+  const attrs = raw.log_access_attributes;
+  if (!attrs || !attrs.url) {
+    return { lines: [], unavailable: "missing" };
+  }
+  if (attrs.type && attrs.type !== "old_logs") {
+    return { lines: [], unavailable: "logflow" };
+  }
+  const logRes = await fetch(attrs.url, { cache: "no-store" });
+  if (!logRes.ok) throw new Error(`netlify log ${logRes.status}`);
+  const text = await logRes.text();
+  const lines: LogLine[] = text
+    .split("\n")
+    .filter((line) => line.trim().length > 0)
+    .map((line) => ({
+      ts: null,
+      level: inferNetlifyLevel(line),
+      text: line,
+    }));
+  return { lines };
 }
