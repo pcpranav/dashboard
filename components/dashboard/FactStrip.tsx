@@ -10,22 +10,29 @@ import type {
   SupabaseResponse,
 } from "@/types";
 import { cn } from "@/lib/utils";
+import { useFilter } from "./filter-context";
 
-function countErrors24h(deploys: DeploymentData[]): number {
-  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-  return deploys.filter(
-    (d) => d.status === "error" && new Date(d.createdAt).getTime() >= cutoff,
-  ).length;
+function countInWindow(deploys: DeploymentData[], startMs: number, endMs: number): number {
+  return deploys.filter((d) => {
+    const t = new Date(d.createdAt).getTime();
+    return t >= startMs && t < endMs;
+  }).length;
 }
 
-function countLast7Days(deploys: DeploymentData[]): number {
-  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  return deploys.filter((d) => new Date(d.createdAt).getTime() >= cutoff).length;
+function countErrorsInWindow(deploys: DeploymentData[], startMs: number, endMs: number): number {
+  return deploys.filter(
+    (d) =>
+      d.status === "error" &&
+      new Date(d.createdAt).getTime() >= startMs &&
+      new Date(d.createdAt).getTime() < endMs,
+  ).length;
 }
 
 const NETLIFY_BUILD_LIMIT = 300;
 
 export function FactStrip({ connected }: { connected: ConnectedServices }) {
+  const { range, cutoffMs } = useFilter();
+
   const vercel = useSWR<DeploymentData[]>(
     connected.vercel ? "/api/vercel/deployments" : null,
     fetcher,
@@ -57,8 +64,9 @@ export function FactStrip({ connected }: { connected: ConnectedServices }) {
     (netlify.data?.deploys.length ? new Set(netlify.data.deploys.map((d) => d.project)).size : 0) +
     (supabase.data?.projects.length ?? 0);
 
-  const failed24h = countErrors24h(allDeploys);
-  const deploys7d = countLast7Days(allDeploys);
+  const now = Date.now();
+  const failedInRange = countErrorsInWindow(allDeploys, now - cutoffMs, now);
+  const deploysInRange = countInWindow(allDeploys, now - cutoffMs, now);
   const buildMin = netlify.data?.buildMinutes ?? 0;
   const domainsCount = domains.data?.length ?? 0;
 
@@ -71,14 +79,11 @@ export function FactStrip({ connected }: { connected: ConnectedServices }) {
 
   const cells: { label: string; value: React.ReactNode; tone?: "default" | "danger" | "success" }[] = [
     { label: "Projects", value: totalProjects },
+    { label: `Deploys ${range}`, value: deploysInRange },
     {
-      label: "Deploys 7d",
-      value: deploys7d,
-    },
-    {
-      label: "Failed 24h",
-      value: failed24h,
-      tone: failed24h > 0 ? "danger" : "default",
+      label: `Failed ${range}`,
+      value: failedInRange,
+      tone: failedInRange > 0 ? "danger" : "default",
     },
     {
       label: "Build min",
