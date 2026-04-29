@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { sql } from "@vercel/postgres";
 import { decrypt, encrypt } from "./encryption";
 
@@ -81,7 +82,7 @@ export interface DecryptedTokens {
   supabaseProjectRefs: string[];
 }
 
-export async function getDecryptedTokens(userId: string): Promise<DecryptedTokens> {
+export const getDecryptedTokens = cache(async (userId: string): Promise<DecryptedTokens> => {
   const row = await getTokensRow(userId);
   if (!row) return { vercel: null, netlify: null, supabase: null, supabaseProjectRefs: [] };
   return {
@@ -90,7 +91,7 @@ export async function getDecryptedTokens(userId: string): Promise<DecryptedToken
     supabase: row.supabase_token ? decrypt(row.supabase_token) : null,
     supabaseProjectRefs: row.supabase_project_refs ? JSON.parse(row.supabase_project_refs) : [],
   };
-}
+});
 
 export async function saveToken(
   userId: string,
