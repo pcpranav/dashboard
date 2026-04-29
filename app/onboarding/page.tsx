@@ -11,11 +11,11 @@ export default async function OnboardingPage() {
   if (!session?.user?.id) {
     return (
       <main className="flex min-h-screen items-center justify-center p-6">
-        <div className="glass-strong flex w-full max-w-md flex-col items-center gap-6 rounded-3xl p-10 text-center">
+        <div className="flex w-full max-w-md flex-col items-center gap-6 border border-border bg-surface p-10 text-center">
           <Logo size={48} />
           <div className="flex flex-col gap-1.5">
             <h1 className="text-2xl font-semibold tracking-tight">
-              Sign in to <span className="text-blue-soft">DevPulse</span>
+              Sign in to <span className="text-brand">DevPulse</span>
             </h1>
             <p className="text-sm text-muted">Connect your services after signing in.</p>
           </div>
@@ -28,7 +28,7 @@ export default async function OnboardingPage() {
           >
             <Button type="submit" size="lg" className="w-full">Continue with Google</Button>
           </form>
-          <Link href="/" className="text-[11px] text-muted underline decoration-dotted underline-offset-4 hover:text-fg">
+          <Link href="/" className="text-[11px] text-muted-soft underline decoration-dotted underline-offset-4 hover:text-fg">
             Back to home
           </Link>
         </div>
@@ -51,7 +51,7 @@ export default async function OnboardingPage() {
       <div className="flex w-full max-w-xl flex-col gap-6">
         <div className="flex items-center justify-between">
           <Logo size={28} withWordmark />
-          <span className="text-xs text-muted mono uppercase tracking-widest">Setup</span>
+          <span className="text-xs text-muted-soft uppercase tracking-[0.15em]">Setup</span>
         </div>
         <TokenForm />
       </div>
