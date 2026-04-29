@@ -123,7 +123,7 @@ export function LinkedProjects({ connected }: { connected: ConnectedServices }) 
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/[0.06] text-fg">
+          <div className="flex h-7 w-7 items-center justify-center border border-border bg-surface-alt text-fg">
             <LinkIcon />
           </div>
           <CardTitle>Linked projects</CardTitle>
@@ -136,7 +136,7 @@ export function LinkedProjects({ connected }: { connected: ConnectedServices }) 
       </CardHeader>
       <CardContent className="space-y-3">
         {adding && (
-          <div className="space-y-2.5 rounded-xl border border-border bg-white/[0.02] p-3">
+          <div className="space-y-2.5 border border-border bg-surface-alt p-3">
             <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
               <Select
                 label="Frontend project"
@@ -207,7 +207,7 @@ export function LinkedProjects({ connected }: { connected: ConnectedServices }) 
               return (
                 <li
                   key={l.id}
-                  className="flex items-center gap-3 rounded-lg border border-border bg-white/[0.02] p-2.5"
+                  className="flex items-center gap-3 border border-border bg-surface-alt p-2.5"
                 >
                   <div className="flex min-w-0 flex-1 items-center gap-2.5">
                     <span
@@ -274,11 +274,11 @@ function Select({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[10px] mono uppercase tracking-widest text-muted">{label}</span>
+      <span className="text-[10px] uppercase tracking-widest text-muted">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-10 rounded-xl border border-border bg-white/[0.03] px-3 text-sm text-fg backdrop-blur-md transition-colors focus:border-blue/60 focus:outline-none focus:ring-2 focus:ring-blue/20"
+        className="h-10 rounded-none border border-border bg-surface px-3 text-sm text-fg transition-colors focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value} className="bg-bg text-fg">
