@@ -17,19 +17,17 @@ export function StepIndicator({ step, total, labels }: Props) {
           <div key={label} className="flex flex-1 items-center gap-2.5">
             <div
               className={cn(
-                "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs mono font-semibold transition-all",
-                done &&
-                  "bg-aurora text-black shadow-[0_0_20px_-4px_rgba(167,139,250,0.7)]",
-                current &&
-                  "border border-violet/60 bg-violet/10 text-violet shadow-[0_0_20px_-6px_rgba(167,139,250,0.6)]",
-                !done && !current && "border border-border bg-white/[0.02] text-muted",
+                "flex h-8 w-8 shrink-0 items-center justify-center text-xs mono tnum font-semibold transition-colors",
+                done && "bg-brand text-white",
+                current && "border border-brand bg-brand-soft text-brand",
+                !done && !current && "border border-border bg-surface text-muted-soft",
               )}
             >
               {done ? <Check /> : n}
             </div>
             <span
               className={cn(
-                "text-[11px] uppercase tracking-widest font-medium",
+                "text-[11px] uppercase tracking-[0.15em] font-medium",
                 current ? "text-fg" : "text-muted",
               )}
             >
@@ -39,7 +37,7 @@ export function StepIndicator({ step, total, labels }: Props) {
               <div
                 className={cn(
                   "mx-1 h-px flex-1 transition-colors",
-                  done ? "bg-gradient-to-r from-violet to-cyan" : "bg-border",
+                  done ? "bg-brand" : "bg-border",
                 )}
               />
             )}

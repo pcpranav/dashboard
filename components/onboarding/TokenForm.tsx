@@ -106,7 +106,7 @@ export function TokenForm() {
             href={current.helpUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-muted underline decoration-dotted underline-offset-4 transition-colors hover:text-violet"
+            className="inline-flex items-center gap-1 text-xs text-muted underline decoration-dotted underline-offset-4 transition-colors hover:text-brand"
           >
             Where do I get this?
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
@@ -115,7 +115,7 @@ export function TokenForm() {
           </a>
         </div>
         {error && (
-          <div className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+          <div className="border border-danger/30 bg-danger-soft px-3 py-2 text-xs text-danger">
             {error}
           </div>
         )}
