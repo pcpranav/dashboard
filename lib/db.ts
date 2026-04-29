@@ -1,6 +1,8 @@
 import { sql } from "@vercel/postgres";
 import { decrypt, encrypt } from "./encryption";
 
+let schemaInitialized = false;
+
 export interface UserTokensRow {
   user_id: string;
   vercel_token: string | null;
@@ -11,6 +13,7 @@ export interface UserTokensRow {
 }
 
 export async function initSchema(): Promise<void> {
+  if (schemaInitialized) return;
   await sql`CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
@@ -35,6 +38,7 @@ export async function initSchema(): Promise<void> {
     created_at TIMESTAMP DEFAULT NOW(),
     UNIQUE(user_id, frontend_provider, frontend_project_name, supabase_project_ref)
   );`;
+  schemaInitialized = true;
 }
 
 export async function upsertUser(user: {
