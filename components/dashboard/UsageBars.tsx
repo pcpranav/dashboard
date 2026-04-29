@@ -17,7 +17,7 @@ const NETLIFY_BUILD_LIMIT = 300;
 function barColor(pct: number): string {
   if (pct >= 90) return "bg-danger";
   if (pct >= 70) return "bg-warning";
-  return "bg-blue";
+  return "bg-brand";
 }
 
 export function UsageBars({ connected }: { connected: ConnectedServices }) {
@@ -32,14 +32,15 @@ export function UsageBars({ connected }: { connected: ConnectedServices }) {
     SWR_CONFIG,
   );
 
-  type Row = { label: string; current: string; pct: number };
+  type Row = { label: string; current: string; limit: string; pct: number };
   const rows: Row[] = [];
 
   if (netlify.data) {
     const pct = (netlify.data.buildMinutes / NETLIFY_BUILD_LIMIT) * 100;
     rows.push({
       label: "Netlify · build minutes",
-      current: `${netlify.data.buildMinutes} / ${NETLIFY_BUILD_LIMIT} min`,
+      current: `${netlify.data.buildMinutes}`,
+      limit: `${NETLIFY_BUILD_LIMIT} min`,
       pct,
     });
   }
@@ -55,7 +56,8 @@ export function UsageBars({ connected }: { connected: ConnectedServices }) {
       if (totalDbLimit > 0) {
         rows.push({
           label: "Supabase · db size (all projects)",
-          current: `${formatBytes(totalDb)} / ${formatBytes(totalDbLimit)}`,
+          current: formatBytes(totalDb),
+          limit: formatBytes(totalDbLimit),
           pct: (totalDb / totalDbLimit) * 100,
         });
       }
@@ -64,7 +66,8 @@ export function UsageBars({ connected }: { connected: ConnectedServices }) {
       if (totalApiLimit > 0) {
         rows.push({
           label: "Supabase · API requests",
-          current: `${totalApi.toLocaleString()} / ${totalApiLimit.toLocaleString()}`,
+          current: totalApi.toLocaleString(),
+          limit: totalApiLimit.toLocaleString(),
           pct: (totalApi / totalApiLimit) * 100,
         });
       }
@@ -76,33 +79,28 @@ export function UsageBars({ connected }: { connected: ConnectedServices }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/[0.06] text-fg">
-            <UsageIcon />
-          </div>
-          <CardTitle>Usage</CardTitle>
-        </div>
-        <span className="text-[11px] text-muted mono">this month</span>
+        <CardTitle>Usage</CardTitle>
+        <span className="text-[11px] text-muted-soft">this month</span>
       </CardHeader>
       <CardContent className="space-y-4">
         {rows.map((row) => (
           <div key={row.label} className="space-y-1.5">
-            <div className="flex items-center justify-between text-[11px] mono text-muted">
-              <span>{row.label}</span>
-              <span className="text-fg">{row.current}</span>
+            <div className="flex items-baseline justify-between text-[11px]">
+              <span className="text-muted">{row.label}</span>
+              <span className="mono tnum text-fg">
+                <span className="font-semibold">{row.current}</span>
+                <span className="text-muted-soft"> / {row.limit}</span>
+              </span>
             </div>
             <Progress value={row.pct} indicatorClassName={barColor(row.pct)} />
+            <div className="flex justify-between text-[9px] mono text-muted-soft">
+              <span>0</span>
+              <span>{Math.round(row.pct)}%</span>
+              <span>{row.limit.replace(/^[\d.]+\s*/, "")}</span>
+            </div>
           </div>
         ))}
       </CardContent>
     </Card>
-  );
-}
-
-function UsageIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M2 10V12M6 6V12M10 2V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
   );
 }
