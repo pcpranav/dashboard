@@ -1276,7 +1276,7 @@ export function UsageBars({ connected }: { connected: ConnectedServices }) {
             <div className="flex justify-between text-[9px] mono text-muted-soft">
               <span>0</span>
               <span>{Math.round(row.pct)}%</span>
-              <span>{row.limit.replace(/^[\d.]+\s*/, "")}</span>
+              <span>{row.limit.replace(/^[\d.,]+\s*/, "")}</span>
             </div>
           </div>
         ))}
