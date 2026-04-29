@@ -4,15 +4,15 @@ import { Logo } from "@/components/ui/logo";
 
 export function Header({ email }: { email?: string | null }) {
   return (
-    <header className="glass sticky top-4 z-20 flex items-center justify-between rounded-2xl px-5 py-3">
+    <header className="sticky top-0 z-20 -mx-4 flex items-center justify-between border-b border-border bg-bg/80 px-4 py-3 backdrop-blur-sm md:-mx-6 md:px-6">
       <div className="flex items-center gap-3">
-        <Logo size={28} withWordmark />
+        <Logo size={26} withWordmark />
         <span className="hidden text-xs text-muted sm:inline">· Live dev dashboard</span>
       </div>
       <div className="flex items-center gap-3">
         {email && (
-          <span className="hidden items-center gap-2 rounded-full border border-border bg-white/[0.02] px-3 py-1 text-xs text-muted mono md:inline-flex">
-            <span className="h-1.5 w-1.5 rounded-full bg-mint shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
+          <span className="hidden items-center gap-2 border border-border bg-surface px-3 py-1 text-xs text-muted mono md:inline-flex">
+            <span className="h-1.5 w-1.5 rounded-full bg-success" />
             {email}
           </span>
         )}
