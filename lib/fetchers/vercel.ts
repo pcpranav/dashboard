@@ -80,6 +80,23 @@ function mapVercelContext(target: string | null | undefined): DeployContext {
   return "preview";
 }
 
+function mapVercelDeployment(d: VercelDeployment): DeploymentData {
+  const startedAt = d.buildingAt ?? d.created;
+  const duration = d.ready && startedAt ? Math.round((d.ready - startedAt) / 1000) : 0;
+  return {
+    id: d.uid,
+    project: d.name,
+    status: mapVercelState(d.readyState ?? d.state),
+    branch: d.meta?.githubCommitRef ?? "",
+    commitMessage: d.meta?.githubCommitMessage ?? "",
+    duration,
+    createdAt: new Date(d.created).toISOString(),
+    url: d.url.startsWith("http") ? d.url : `https://${d.url}`,
+    provider: "vercel" as const,
+    context: mapVercelContext(d.target),
+  };
+}
+
 export async function fetchVercelDeployments(token: string, limit = 10): Promise<DeploymentData[]> {
   const res = await fetch(`${BASE}/v6/deployments?limit=${limit}`, {
     headers: headers(token),
@@ -87,22 +104,7 @@ export async function fetchVercelDeployments(token: string, limit = 10): Promise
   });
   if (!res.ok) throw new Error(`vercel deployments ${res.status}`);
   const json = (await res.json()) as { deployments: VercelDeployment[] };
-  return json.deployments.map((d) => {
-    const startedAt = d.buildingAt ?? d.created;
-    const duration = d.ready && startedAt ? Math.round((d.ready - startedAt) / 1000) : 0;
-    return {
-      id: d.uid,
-      project: d.name,
-      status: mapVercelState(d.readyState ?? d.state),
-      branch: d.meta?.githubCommitRef ?? "",
-      commitMessage: d.meta?.githubCommitMessage ?? "",
-      duration,
-      createdAt: new Date(d.created).toISOString(),
-      url: d.url.startsWith("http") ? d.url : `https://${d.url}`,
-      provider: "vercel" as const,
-      context: mapVercelContext(d.target),
-    };
-  });
+  return json.deployments.map(mapVercelDeployment);
 }
 
 interface VercelDomain {
