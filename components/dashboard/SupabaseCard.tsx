@@ -15,7 +15,7 @@ const DB_LIMIT = 500 * 1024 * 1024;
 function progressColor(pct: number): string {
   if (pct >= 90) return "bg-danger";
   if (pct >= 70) return "bg-warning";
-  return "bg-blue";
+  return "bg-brand";
 }
 
 function formatStatus(raw?: string): string {
@@ -46,7 +46,7 @@ export function SupabaseCard({ connected }: { connected: boolean }) {
     <Card className="overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/[0.06] text-fg">
+          <div className="flex h-7 w-7 items-center justify-center border border-border bg-surface-alt text-fg">
             <SupabaseLogo />
           </div>
           <CardTitle>Supabase</CardTitle>
@@ -83,7 +83,7 @@ export function SupabaseCard({ connected }: { connected: boolean }) {
             return (
               <div
                 key={project.id}
-                className="space-y-2.5 rounded-xl border border-border bg-white/[0.02] p-3.5 transition-colors hover:border-border-strong"
+                className="space-y-2.5 border border-border bg-surface p-3.5 transition-colors hover:border-border-strong"
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex min-w-0 flex-col gap-0.5">
@@ -116,7 +116,7 @@ export function SupabaseCard({ connected }: { connected: boolean }) {
                         className={cn(
                           "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] mono",
                           s.healthy
-                            ? "border-success/25 bg-success/5 text-success"
+                            ? "border-success/25 bg-success/10 text-success"
                             : "border-danger/30 bg-danger/10 text-danger",
                         )}
                       >
@@ -228,9 +228,9 @@ function Metric({
 }) {
   return (
     <div className="space-y-1">
-      <div className="flex items-center justify-between text-[10px] mono text-muted">
-        <span>{label}</span>
-        <span className="text-fg">{value}</span>
+      <div className="flex items-center justify-between text-[10px]">
+        <span className="text-muted">{label}</span>
+        <span className="mono tnum text-fg">{value}</span>
       </div>
       {!hideBar && <Progress value={pct} indicatorClassName={progressColor(pct)} />}
     </div>
@@ -239,7 +239,7 @@ function Metric({
 
 function Chip({ label }: { label: string }) {
   return (
-    <span className="inline-flex items-center rounded-full border border-border bg-white/[0.03] px-2 py-0.5 text-[10px] mono text-muted">
+    <span className="inline-flex items-center rounded-full border border-border bg-surface-alt px-2 py-0.5 text-[10px] mono text-muted">
       {label}
     </span>
   );
