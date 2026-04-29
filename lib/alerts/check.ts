@@ -3,6 +3,7 @@ import {
   getActiveAlerts,
   getDecryptedTokens,
   getSlackWebhookUrl,
+  initSchema,
   listUsersWithAlerting,
   recordAlertSent,
 } from "@/lib/db";
@@ -120,6 +121,7 @@ export async function evaluateAndDispatch(): Promise<{
   alertsSent: number;
   errors: number;
 }> {
+  await initSchema();
   const users = await listUsersWithAlerting();
   let alertsSent = 0;
   let errors = 0;
@@ -128,7 +130,10 @@ export async function evaluateAndDispatch(): Promise<{
     try {
       const r = await evaluateUser(u);
       if (r.sent) alertsSent += 1;
-      if (r.error) errors += 1;
+      if (r.error) {
+        console.warn(`[alerts] user ${u.userId} send failed:`, r.error);
+        errors += 1;
+      }
     } catch (err) {
       console.warn(`[alerts] user ${u.userId} failed:`, (err as Error).message);
       errors += 1;
