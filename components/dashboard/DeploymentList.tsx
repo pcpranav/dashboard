@@ -1,15 +1,33 @@
+"use client";
+
 import type { DeploymentData } from "@/types";
 import { StatusDot } from "./StatusDot";
 import { formatDuration, timeAgo } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { matchesQuery, useFilter } from "./filter-context";
 
 export function DeploymentList({ deployments }: { deployments: DeploymentData[] }) {
+  const { q } = useFilter();
+
+  const filtered = q
+    ? deployments.filter(
+        (d) =>
+          matchesQuery(d.project, q) ||
+          matchesQuery(d.branch, q) ||
+          matchesQuery(d.commitMessage, q),
+      )
+    : deployments;
+
   if (!deployments.length) {
     return <p className="text-[13px] text-muted">No deployments found.</p>;
   }
+  if (q && filtered.length === 0) {
+    return <p className="text-[13px] text-muted">No deployments match &ldquo;{q}&rdquo;.</p>;
+  }
+
   return (
     <ul className="divide-y divide-border border-y border-border">
-      {deployments.map((d) => (
+      {filtered.map((d) => (
         <li
           key={d.id}
           className="group flex items-start gap-3 px-2 py-2 transition-colors hover:bg-surface-alt"
