@@ -8,9 +8,31 @@ import { Progress } from "@/components/ui/progress";
 import { fetcher, SWR_CONFIG } from "@/lib/swr";
 import type { DeploymentData, DomainData, VercelTeam, VercelUsageData } from "@/types";
 import { DeploymentList } from "./DeploymentList";
-import { DeployBarChart } from "./DeployBarChart";
+import { DeployBarChart, type ChartBin } from "./DeployBarChart";
 import { ConnectCTA } from "./ConnectCTA";
 import { formatBytes } from "@/lib/utils";
+
+function buildVercelBins(deploys: DeploymentData[]): ChartBin[] {
+  const bins: ChartBin[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const day = new Date();
+    day.setHours(0, 0, 0, 0);
+    day.setDate(day.getDate() - i);
+    const start = day.getTime();
+    const end = start + 24 * 60 * 60 * 1000;
+    const inWindow = deploys.filter((d) => {
+      const t = new Date(d.createdAt).getTime();
+      return t >= start && t < end;
+    });
+    bins.push({
+      key: `d-${day.toISOString().slice(0, 10)}`,
+      label: day.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 1),
+      count: inWindow.length,
+      errors: inWindow.filter((d) => d.status === "error").length,
+    });
+  }
+  return bins;
+}
 
 function daysUntil(iso?: string | null): number | null {
   if (!iso) return null;
@@ -87,7 +109,7 @@ export function VercelCard({ connected }: { connected: boolean }) {
         {connected && deploys.data && (
           <>
             <DeploymentList deployments={deploys.data} />
-            <DeployBarChart deployments={deploys.data} />
+            <DeployBarChart bins={buildVercelBins(deploys.data)} />
 
             {stats && (
               <div className="grid grid-cols-2 gap-2 pt-1">

@@ -12,7 +12,8 @@ import type {
   VercelUsageData,
 } from "@/types";
 import { cn } from "@/lib/utils";
-import { DeployBarChart } from "./DeployBarChart";
+import { DeployBarChart, type ChartBin } from "./DeployBarChart";
+import { useFilter, type FilterRange } from "./filter-context";
 
 interface Issue {
   id: string;
@@ -44,9 +45,10 @@ function buildIssues(args: {
   netlify?: NetlifyResponse;
   netlifyBw?: NetlifyBandwidthData;
   supabase?: SupabaseResponse;
+  cutoffMs: number;
 }): Issue[] {
   const issues: Issue[] = [];
-  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  const cutoff = Date.now() - args.cutoffMs;
 
   const allDeploys = [...(args.vercelDeploys ?? []), ...(args.netlify?.deploys ?? [])];
   const failing = allDeploys.filter(
@@ -56,7 +58,7 @@ function buildIssues(args: {
     issues.push({
       id: "failing",
       severity: "danger",
-      label: `${failing.length} failed deploy${failing.length === 1 ? "" : "s"} in 24h`,
+      label: `${failing.length} failed deploy${failing.length === 1 ? "" : "s"} in ${labelForCutoff(args.cutoffMs)}`,
     });
   }
 
@@ -144,22 +146,123 @@ function buildIssues(args: {
   return issues;
 }
 
-function countLast7Days(deploys: DeploymentData[]): number {
-  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  return deploys.filter((d) => new Date(d.createdAt).getTime() >= cutoff).length;
+function labelForCutoff(cutoffMs: number): string {
+  const hours = Math.round(cutoffMs / (60 * 60 * 1000));
+  if (hours <= 24) return "24h";
+  const days = Math.round(hours / 24);
+  return `${days}d`;
 }
 
-function countLast14To7Days(deploys: DeploymentData[]): number {
-  const now = Date.now();
-  const cutoffStart = now - 14 * 24 * 60 * 60 * 1000;
-  const cutoffEnd = now - 7 * 24 * 60 * 60 * 1000;
+function countInWindow(deploys: DeploymentData[], startMs: number, endMs: number): number {
   return deploys.filter((d) => {
     const t = new Date(d.createdAt).getTime();
-    return t >= cutoffStart && t < cutoffEnd;
+    return t >= startMs && t < endMs;
   }).length;
 }
 
+function buildBins(deploys: DeploymentData[], range: FilterRange): { bins: ChartBin[]; labelEvery: number } {
+  const now = Date.now();
+
+  if (range === "24h") {
+    // 24 hour-bins, label every 4h
+    const bins: ChartBin[] = [];
+    for (let i = 23; i >= 0; i--) {
+      const start = now - (i + 1) * 60 * 60 * 1000;
+      const end = now - i * 60 * 60 * 1000;
+      const count = deploys.filter((d) => {
+        const t = new Date(d.createdAt).getTime();
+        return t >= start && t < end;
+      }).length;
+      const errors = deploys.filter((d) => {
+        const t = new Date(d.createdAt).getTime();
+        return t >= start && t < end && d.status === "error";
+      }).length;
+      const hourLabel = new Date(end - 1).getHours();
+      bins.push({
+        key: `h-${i}`,
+        label: i % 4 === 0 ? String(hourLabel).padStart(2, "0") : "",
+        count,
+        errors,
+      });
+    }
+    return { bins, labelEvery: 1 };
+  }
+
+  if (range === "7d") {
+    const bins: ChartBin[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const day = new Date();
+      day.setHours(0, 0, 0, 0);
+      day.setDate(day.getDate() - i);
+      const start = day.getTime();
+      const end = start + 24 * 60 * 60 * 1000;
+      const count = countInWindow(deploys, start, end);
+      const errors = deploys.filter((d) => {
+        const t = new Date(d.createdAt).getTime();
+        return t >= start && t < end && d.status === "error";
+      }).length;
+      bins.push({
+        key: `d-${day.toISOString().slice(0, 10)}`,
+        label: day.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 1),
+        count,
+        errors,
+      });
+    }
+    return { bins, labelEvery: 1 };
+  }
+
+  if (range === "30d") {
+    const bins: ChartBin[] = [];
+    for (let i = 29; i >= 0; i--) {
+      const day = new Date();
+      day.setHours(0, 0, 0, 0);
+      day.setDate(day.getDate() - i);
+      const start = day.getTime();
+      const end = start + 24 * 60 * 60 * 1000;
+      const count = countInWindow(deploys, start, end);
+      const errors = deploys.filter((d) => {
+        const t = new Date(d.createdAt).getTime();
+        return t >= start && t < end && d.status === "error";
+      }).length;
+      bins.push({
+        key: `d-${day.toISOString().slice(0, 10)}`,
+        label: `d${30 - i}`,
+        count,
+        errors,
+      });
+    }
+    return { bins, labelEvery: 7 };
+  }
+
+  // 90d → 13 week-bins
+  const bins: ChartBin[] = [];
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  for (let i = 12; i >= 0; i--) {
+    const weekStart = new Date(startOfToday);
+    weekStart.setDate(weekStart.getDate() - (i + 1) * 7 + 1);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    const start = weekStart.getTime();
+    const end = weekEnd.getTime();
+    const count = countInWindow(deploys, start, end);
+    const errors = deploys.filter((d) => {
+      const t = new Date(d.createdAt).getTime();
+      return t >= start && t < end && d.status === "error";
+    }).length;
+    bins.push({
+      key: `w-${weekStart.toISOString().slice(0, 10)}`,
+      label: `w${13 - i}`,
+      count,
+      errors,
+    });
+  }
+  return { bins, labelEvery: 1 };
+}
+
 export function HeroCard({ connected }: { connected: ConnectedServices }) {
+  const { range, cutoffMs } = useFilter();
+
   const vercelDeploys = useSWR<DeploymentData[]>(
     connected.vercel ? "/api/vercel/deployments" : null,
     fetcher,
@@ -198,19 +301,23 @@ export function HeroCard({ connected }: { connected: ConnectedServices }) {
     netlify: netlify.data,
     netlifyBw: netlifyBw.data,
     supabase: supabase.data,
+    cutoffMs,
   });
 
   const allDeploys: DeploymentData[] = [
     ...(vercelDeploys.data ?? []),
     ...(netlify.data?.deploys ?? []),
   ];
-  const deploys7d = countLast7Days(allDeploys);
-  const deploysPrev7d = countLast14To7Days(allDeploys);
-  const deltaPct =
-    deploysPrev7d === 0
-      ? null
-      : Math.round(((deploys7d - deploysPrev7d) / deploysPrev7d) * 100);
 
+  const now = Date.now();
+  const inRangeCount = countInWindow(allDeploys, now - cutoffMs, now);
+  const prevRangeCount = countInWindow(allDeploys, now - 2 * cutoffMs, now - cutoffMs);
+  const deltaPct =
+    prevRangeCount === 0
+      ? null
+      : Math.round(((inRangeCount - prevRangeCount) / prevRangeCount) * 100);
+
+  const { bins, labelEvery } = buildBins(allDeploys, range);
   const topIssue = issues.find((i) => i.severity === "danger") ?? issues[0];
 
   return (
@@ -234,7 +341,7 @@ export function HeroCard({ connected }: { connected: ConnectedServices }) {
           <h2 className="mt-2 text-2xl font-semibold leading-tight tracking-tight md:text-[26px]">
             {topIssue
               ? topIssue.label
-              : `${deploys7d} deploys this week — all systems healthy.`}
+              : `${inRangeCount} deploy${inRangeCount === 1 ? "" : "s"} in ${range} — all systems healthy.`}
           </h2>
           {issues.length > 1 && (
             <ul className="mt-4 space-y-1 text-[12px] text-muted">
@@ -257,10 +364,10 @@ export function HeroCard({ connected }: { connected: ConnectedServices }) {
         </div>
         <div className="border-t border-border pt-6 md:border-l md:border-t-0 md:pl-10 md:pt-0">
           <div className="text-[9px] uppercase tracking-[0.15em] font-medium text-muted-soft">
-            Deploys / 7d
+            Deploys / {range}
           </div>
           <div className="mt-1 mono tnum text-[40px] font-semibold leading-none tracking-tight">
-            {deploys7d}
+            {inRangeCount}
           </div>
           {deltaPct !== null && (
             <div
@@ -270,11 +377,11 @@ export function HeroCard({ connected }: { connected: ConnectedServices }) {
               )}
             >
               {deltaPct >= 0 ? "+" : ""}
-              {deltaPct}% vs previous 7d
+              {deltaPct}% vs previous {range}
             </div>
           )}
           <div className="mt-4">
-            <DeployBarChart deployments={allDeploys} />
+            <DeployBarChart bins={bins} labelEvery={labelEvery} />
           </div>
         </div>
       </div>
