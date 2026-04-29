@@ -4,8 +4,11 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60; // Vercel hobby max is 10s; pro is 60s. Keep at 60.
 
 export async function GET(req: Request) {
-  const auth = req.headers.get("authorization");
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  const expected = process.env.CRON_SECRET;
+  if (!expected) {
+    return new Response("Misconfigured", { status: 500 });
+  }
+  if (req.headers.get("authorization") !== `Bearer ${expected}`) {
     return new Response("Forbidden", { status: 403 });
   }
   try {
