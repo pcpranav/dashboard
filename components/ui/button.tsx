@@ -3,18 +3,18 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "relative inline-flex items-center justify-center gap-2 rounded-xl text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-violet focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]",
+  "relative inline-flex items-center justify-center gap-2 rounded-none text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]",
   {
     variants: {
       variant: {
         default:
-          "bg-aurora text-black font-semibold shadow-[0_8px_30px_-8px_rgba(167,139,250,0.6)] hover:shadow-[0_12px_40px_-8px_rgba(167,139,250,0.8)] hover:brightness-110",
+          "bg-brand text-white hover:bg-brand/90",
         outline:
-          "glass text-fg hover:bg-surface-strong hover:border-border-strong",
+          "border border-border bg-surface text-fg hover:border-border-strong hover:bg-surface-alt",
         ghost:
-          "text-fg hover:bg-white/5",
+          "text-fg hover:bg-surface-alt",
         destructive:
-          "bg-danger/90 text-white hover:bg-danger shadow-[0_8px_30px_-8px_rgba(251,113,133,0.5)]",
+          "bg-danger text-white hover:bg-danger/90",
       },
       size: {
         default: "h-10 px-5 py-2",
