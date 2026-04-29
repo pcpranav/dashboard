@@ -4,6 +4,7 @@ import useSWR from "swr";
 import { fetcher, SWR_CONFIG } from "@/lib/swr";
 import type { ActivityEvent, ConnectedServices, DeploymentData, NetlifyResponse, SupabaseResponse } from "@/types";
 import { cn } from "@/lib/utils";
+import { matchesQuery, useFilter } from "./filter-context";
 
 const EVENT_COLOR: Record<ActivityEvent["type"], string> = {
   deploy_success: "bg-success",
@@ -48,6 +49,8 @@ function deployToEvent(d: DeploymentData): ActivityEvent {
 }
 
 export function ActivityFeed({ connected }: { connected: ConnectedServices }) {
+  const { cutoffMs, q } = useFilter();
+
   const vercel = useSWR<DeploymentData[]>(
     connected.vercel ? "/api/vercel/deployments" : null,
     fetcher,
@@ -82,7 +85,12 @@ export function ActivityFeed({ connected }: { connected: ConnectedServices }) {
     }
   }
 
-  const sorted = events
+  const cutoff = Date.now() - cutoffMs;
+  const filtered = events
+    .filter((e) => new Date(e.timestamp).getTime() >= cutoff)
+    .filter((e) => matchesQuery(e.message, q) || matchesQuery(e.service, q));
+
+  const sorted = filtered
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
     .slice(0, 20);
 
@@ -91,12 +99,14 @@ export function ActivityFeed({ connected }: { connected: ConnectedServices }) {
       <div className="mb-3 flex items-baseline justify-between">
         <h3 className="text-[15px] font-semibold tracking-tight">Recent activity</h3>
         <span className="text-[10px] uppercase tracking-[0.15em] text-muted-soft">
-          last {sorted.length} events
+          {q ? `${sorted.length} match${sorted.length === 1 ? "" : "es"}` : `last ${sorted.length} events`}
         </span>
       </div>
       <div className="border-t border-rule">
         {sorted.length === 0 ? (
-          <p className="py-4 text-sm text-muted">No recent activity.</p>
+          <p className="py-4 text-[13px] text-muted">
+            {q ? `No activity matches "${q}".` : "No recent activity."}
+          </p>
         ) : (
           <ul>
             {sorted.map((e) => (
