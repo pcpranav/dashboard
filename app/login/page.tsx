@@ -24,18 +24,18 @@ export default async function LoginPage() {
       <div className="w-full max-w-md">
         <Link
           href="/"
-          className="mb-4 inline-flex items-center gap-1.5 text-xs text-muted transition-colors hover:text-fg"
+          className="mb-4 inline-flex items-center gap-1.5 text-xs text-muted-soft transition-colors hover:text-fg"
         >
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
             <path d="M6 2L3 5L6 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           Back to home
         </Link>
-        <div className="glass-strong flex flex-col items-center gap-7 rounded-3xl p-10 text-center">
+        <div className="flex flex-col items-center gap-7 border border-border bg-surface p-10 text-center">
           <Logo size={56} />
           <div className="flex flex-col gap-2">
             <h1 className="text-2xl font-semibold tracking-tight">
-              Welcome to <span className="text-blue-soft">DevPulse</span>
+              Welcome to <span className="text-brand">DevPulse</span>
             </h1>
             <p className="text-sm text-muted leading-relaxed">
               Sign in to connect Vercel, Netlify, and Supabase in one place.
@@ -53,7 +53,7 @@ export default async function LoginPage() {
               Continue with Google
             </Button>
           </form>
-          <p className="text-[11px] text-muted mono">
+          <p className="text-[11px] text-muted-soft mono">
             Tokens you provide later are encrypted at rest and used read-only.
           </p>
         </div>
