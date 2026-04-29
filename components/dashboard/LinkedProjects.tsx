@@ -13,6 +13,7 @@ import type {
   SupabaseResponse,
 } from "@/types";
 import { cn } from "@/lib/utils";
+import { matchesQuery, useFilter } from "./filter-context";
 
 interface Link {
   id: number;
@@ -80,6 +81,20 @@ export function LinkedProjects({ connected }: { connected: ConnectedServices }) 
     }
     return Array.from(set.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [vercelProjects.data, netlifySites.data]);
+
+  const { q } = useFilter();
+  const filteredLinks = q
+    ? (links.data ?? []).filter((l) => {
+        const supName = supabase.data?.projects.find(
+          (p) => p.domain.startsWith(`${l.supabaseProjectRef}.`),
+        )?.name;
+        return (
+          matchesQuery(l.frontendProjectName, q) ||
+          matchesQuery(l.supabaseProjectRef, q) ||
+          matchesQuery(supName, q)
+        );
+      })
+    : links.data;
 
   const supabaseOptions = supabase.data?.projects ?? [];
 
@@ -184,15 +199,17 @@ export function LinkedProjects({ connected }: { connected: ConnectedServices }) 
           </div>
         )}
 
-        {links.data && links.data.length === 0 && !adding && (
+        {!adding && filteredLinks && filteredLinks.length === 0 && (
           <p className="text-[13px] text-muted">
-            Pair a frontend project with a Supabase project to see deploy + DB state side-by-side.
+            {q
+              ? `No linked projects match "${q}".`
+              : "Pair a frontend project with a Supabase project to see deploy + DB state side-by-side."}
           </p>
         )}
 
-        {links.data && links.data.length > 0 && (
+        {filteredLinks && filteredLinks.length > 0 && (
           <ul className="space-y-1">
-            {links.data.map((l) => {
+            {filteredLinks.map((l) => {
               const deployList =
                 l.frontendProvider === "vercel"
                   ? vercelDeploys.data
