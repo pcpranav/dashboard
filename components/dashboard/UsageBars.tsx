@@ -92,7 +92,9 @@ export function UsageBars({ connected }: { connected: ConnectedServices }) {
                 <span className="text-muted-soft"> / {row.limit}</span>
               </span>
             </div>
-            <Progress value={row.pct} indicatorClassName={barColor(row.pct)} />
+            <div className="border-b border-rule">
+              <Progress value={row.pct} indicatorClassName={barColor(row.pct)} className="rounded-none" />
+            </div>
             <div className="flex justify-between text-[9px] mono text-muted-soft">
               <span>0</span>
               <span>{Math.round(row.pct)}%</span>
