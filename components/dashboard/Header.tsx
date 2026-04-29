@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { signOut } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
@@ -16,6 +17,11 @@ export function Header({ email }: { email?: string | null }) {
             {email}
           </span>
         )}
+        <Link href="/settings/alerts">
+          <Button variant="ghost" size="sm">
+            Alerts
+          </Button>
+        </Link>
         <form
           action={async () => {
             "use server";
