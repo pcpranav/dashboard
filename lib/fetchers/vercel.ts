@@ -3,6 +3,7 @@ import type {
   DeploymentData,
   DeployStatus,
   DomainData,
+  LogLine,
   ProjectData,
   VercelTeam,
   VercelUsageData,
@@ -105,6 +106,50 @@ export async function fetchVercelDeployments(token: string, limit = 10): Promise
   if (!res.ok) throw new Error(`vercel deployments ${res.status}`);
   const json = (await res.json()) as { deployments: VercelDeployment[] };
   return json.deployments.map(mapVercelDeployment);
+}
+
+export async function fetchVercelDeployment(token: string, id: string): Promise<DeploymentData> {
+  const res = await fetch(`${BASE}/v13/deployments/${encodeURIComponent(id)}`, {
+    headers: headers(token),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`vercel deployment ${res.status}`);
+  const raw = (await res.json()) as VercelDeployment;
+  return mapVercelDeployment(raw);
+}
+
+interface VercelEvent {
+  type?: string;
+  created?: number;
+  payload?: { text?: string };
+  text?: string;
+}
+
+function inferLevel(text: string, type?: string): LogLine["level"] {
+  if (type === "stderr") return "error";
+  if (/error|✗|failed/i.test(text)) return "error";
+  if (/warn/i.test(text)) return "warn";
+  return "info";
+}
+
+export async function fetchVercelDeployLogs(token: string, id: string): Promise<LogLine[]> {
+  const res = await fetch(
+    `${BASE}/v3/deployments/${encodeURIComponent(id)}/events?limit=1000`,
+    { headers: headers(token), cache: "no-store" },
+  );
+  if (!res.ok) throw new Error(`vercel events ${res.status}`);
+  const events = (await res.json()) as VercelEvent[];
+  const lines: LogLine[] = [];
+  for (const e of events) {
+    const text = e.payload?.text ?? e.text ?? "";
+    if (!text.trim()) continue;
+    lines.push({
+      ts: typeof e.created === "number" ? e.created : null,
+      level: inferLevel(text, e.type),
+      text,
+    });
+  }
+  return lines;
 }
 
 interface VercelDomain {
