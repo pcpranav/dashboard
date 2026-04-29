@@ -27,7 +27,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             });
             token.userId = canonical;
           } catch (err) {
-            console.error("[auth] upsertUser failed:", (err as Error).message);
+            console.error("[auth] upsertUser failed");
           }
         }
       }
