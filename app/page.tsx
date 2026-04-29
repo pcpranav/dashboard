@@ -58,7 +58,7 @@ function Hero({ isAuthed }: { isAuthed: boolean }) {
   return (
     <section className="border-b border-border">
       <div className="mx-auto flex max-w-6xl flex-col items-center px-6 pb-20 pt-20 text-center md:pt-28">
-        <div className="inline-flex items-center gap-2 border border-border bg-surface px-3 py-1 text-[11px] mono uppercase tracking-[0.15em] text-muted">
+        <div className="inline-flex items-center gap-2 border border-border bg-surface px-3 py-1 text-[11px] mono uppercase tracking-[0.15em] text-muted-soft">
           <span className="relative flex h-1.5 w-1.5">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
@@ -89,7 +89,7 @@ function Hero({ isAuthed }: { isAuthed: boolean }) {
             </>
           )}
         </div>
-        <div className="mt-6 flex items-center gap-6 text-[11px] mono uppercase tracking-[0.15em] text-muted-soft">
+        <div className="mt-6 flex items-center gap-6 text-[11px] uppercase tracking-[0.15em] text-muted-soft">
           <span>Bring your own tokens</span>
           <span className="h-3 w-px bg-border" />
           <span>Read-only</span>
@@ -169,7 +169,7 @@ function Features() {
     <section id="features" className="border-b border-border">
       <div className="mx-auto max-w-6xl px-6 py-20">
         <div className="mb-12 flex flex-col items-center text-center">
-          <span className="text-[11px] mono uppercase tracking-[0.15em] text-muted">Features</span>
+          <span className="text-[11px] mono uppercase tracking-[0.15em] text-muted-soft">Features</span>
           <h2 className="mt-2 max-w-2xl text-balance text-3xl font-semibold tracking-tight md:text-4xl">
             Everything you need, nothing you don&apos;t.
           </h2>
@@ -200,7 +200,7 @@ function Services() {
     <section id="services" className="border-b border-border">
       <div className="mx-auto max-w-6xl px-6 py-20">
         <div className="mb-12 flex flex-col items-center text-center">
-          <span className="text-[11px] mono uppercase tracking-[0.15em] text-muted">Integrations</span>
+          <span className="text-[11px] mono uppercase tracking-[0.15em] text-muted-soft">Integrations</span>
           <h2 className="mt-2 max-w-2xl text-balance text-3xl font-semibold tracking-tight md:text-4xl">
             Works with your indie stack.
           </h2>
