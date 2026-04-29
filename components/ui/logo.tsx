@@ -17,11 +17,11 @@ export function Logo({ size = 28, className, withWordmark = false }: LogoProps) 
         xmlns="http://www.w3.org/2000/svg"
         aria-label="DevPulse"
       >
-        <rect x="2" y="2" width="28" height="28" rx="2" fill="#1452cc" />
+        <rect x="2" y="2" width="28" height="28" rx="2" fill="var(--brand)" />
         <path
           d="M6 16 L11 16 L13 11 L16 21 L19 13 L21 16 L26 16"
           fill="none"
-          stroke="#ffffff"
+          stroke="var(--surface)"
           strokeWidth="2.4"
           strokeLinecap="round"
           strokeLinejoin="round"
