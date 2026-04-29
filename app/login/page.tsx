@@ -37,7 +37,7 @@ export default async function LoginPage() {
             <h1 className="text-2xl font-semibold tracking-tight">
               Welcome to <span className="text-brand">DevPulse</span>
             </h1>
-            <p className="text-sm text-muted leading-relaxed">
+            <p className="text-[13px] text-muted leading-relaxed">
               Sign in to connect Vercel, Netlify, and Supabase in one place.
             </p>
           </div>
@@ -53,7 +53,7 @@ export default async function LoginPage() {
               Continue with Google
             </Button>
           </form>
-          <p className="text-[11px] text-muted-soft mono">
+          <p className="text-[11px] text-muted-soft">
             Tokens you provide later are encrypted at rest and used read-only.
           </p>
         </div>

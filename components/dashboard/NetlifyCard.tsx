@@ -83,7 +83,7 @@ export function NetlifyCard({ connected }: { connected: boolean }) {
             ))}
           </div>
         )}
-        {connected && deploys.error && <p className="text-sm text-danger">Failed to load deploys.</p>}
+        {connected && deploys.error && <p className="text-[13px] text-danger">Failed to load deploys.</p>}
         {connected && deploys.data && (
           <>
             {account.data?.available && (
@@ -131,10 +131,10 @@ export function NetlifyCard({ connected }: { connected: boolean }) {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-[11px]">
                   <span className="text-muted">Forms</span>
-                  <span className="mono tnum text-fg">
-                    {forms.data.length} form{forms.data.length === 1 ? "" : "s"}
+                  <span className="text-fg">
+                    <span className="mono tnum">{forms.data.length}</span> form{forms.data.length === 1 ? "" : "s"}
                     {totalUnread > 0 && (
-                      <span className="ml-2 text-warning">· {totalUnread} unread</span>
+                      <span className="ml-2 text-warning">· <span className="mono tnum">{totalUnread}</span> unread</span>
                     )}
                   </span>
                 </div>
@@ -145,10 +145,10 @@ export function NetlifyCard({ connected }: { connected: boolean }) {
                       className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] hover:bg-surface-alt"
                     >
                       <span className="truncate text-fg">{f.formName}</span>
-                      <span className="mono tnum text-muted">
-                        {f.submissionsCount} total
+                      <span className="text-muted">
+                        <span className="mono tnum">{f.submissionsCount}</span> total
                         {f.unreadCount > 0 && (
-                          <span className="ml-1.5 text-warning">· {f.unreadCount} unread</span>
+                          <span className="ml-1.5 text-warning">· <span className="mono tnum">{f.unreadCount}</span> unread</span>
                         )}
                       </span>
                     </li>
@@ -160,8 +160,8 @@ export function NetlifyCard({ connected }: { connected: boolean }) {
             {functions.data && functions.data.length > 0 && (
               <div className="flex items-center justify-between text-[11px]">
                 <span className="text-muted">Functions</span>
-                <span className="mono tnum text-fg">
-                  {functions.data.length} across {new Set(functions.data.map((f) => f.siteName)).size} site
+                <span className="text-fg">
+                  <span className="mono tnum">{functions.data.length}</span> across <span className="mono tnum">{new Set(functions.data.map((f) => f.siteName)).size}</span> site
                   {new Set(functions.data.map((f) => f.siteName)).size === 1 ? "" : "s"}
                 </span>
               </div>

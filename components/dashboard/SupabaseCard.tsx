@@ -62,9 +62,9 @@ export function SupabaseCard({ connected }: { connected: boolean }) {
             ))}
           </div>
         )}
-        {connected && error && <p className="text-sm text-danger">Failed to load projects.</p>}
+        {connected && error && <p className="text-[13px] text-danger">Failed to load projects.</p>}
         {connected && data && data.projects.length === 0 && (
-          <p className="text-sm text-muted">No Supabase projects found.</p>
+          <p className="text-[13px] text-muted">No Supabase projects found.</p>
         )}
         {connected && data &&
           data.projects.map((project) => {
@@ -88,12 +88,12 @@ export function SupabaseCard({ connected }: { connected: boolean }) {
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex min-w-0 flex-col gap-0.5">
                     <span className="truncate text-sm font-medium">{project.name}</span>
-                    <div className="flex items-center gap-2 text-[10px] mono text-muted">
-                      {project.region && <span>{project.region}</span>}
+                    <div className="flex items-center gap-2 text-[10px] text-muted">
+                      {project.region && <span className="mono">{project.region}</span>}
                       {project.createdAt && (
                         <>
                           <span>·</span>
-                          <span>created {timeAgo(project.createdAt)}</span>
+                          <span>created <span className="mono tnum">{timeAgo(project.createdAt)}</span></span>
                         </>
                       )}
                     </div>

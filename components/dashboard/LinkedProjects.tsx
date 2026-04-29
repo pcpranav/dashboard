@@ -185,7 +185,7 @@ export function LinkedProjects({ connected }: { connected: ConnectedServices }) 
         )}
 
         {links.data && links.data.length === 0 && !adding && (
-          <p className="text-sm text-muted">
+          <p className="text-[13px] text-muted">
             Pair a frontend project with a Supabase project to see deploy + DB state side-by-side.
           </p>
         )}
@@ -274,7 +274,7 @@ function Select({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[10px] uppercase tracking-widest text-muted">{label}</span>
+      <span className="text-[10px] uppercase tracking-[0.15em] text-muted-soft">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}

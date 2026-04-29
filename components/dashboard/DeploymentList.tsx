@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 export function DeploymentList({ deployments }: { deployments: DeploymentData[] }) {
   if (!deployments.length) {
-    return <p className="text-sm text-muted">No deployments found.</p>;
+    return <p className="text-[13px] text-muted">No deployments found.</p>;
   }
   return (
     <ul className="divide-y divide-border border-y border-border">
@@ -21,7 +21,7 @@ export function DeploymentList({ deployments }: { deployments: DeploymentData[] 
               {d.context && (
                 <span
                   className={cn(
-                    "border px-1 py-0 text-[9px] mono uppercase tracking-widest",
+                    "border px-1 py-0 text-[9px] mono uppercase tracking-[0.15em]",
                     d.context === "production"
                       ? "border-brand/40 bg-brand-soft text-brand"
                       : "border-border bg-surface-alt text-muted",

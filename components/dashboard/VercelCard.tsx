@@ -83,7 +83,7 @@ export function VercelCard({ connected }: { connected: boolean }) {
             ))}
           </div>
         )}
-        {connected && deploys.error && <p className="text-sm text-danger">Failed to load deployments.</p>}
+        {connected && deploys.error && <p className="text-[13px] text-danger">Failed to load deployments.</p>}
         {connected && deploys.data && (
           <>
             <DeploymentList deployments={deploys.data} />

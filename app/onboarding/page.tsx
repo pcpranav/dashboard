@@ -17,7 +17,7 @@ export default async function OnboardingPage() {
             <h1 className="text-2xl font-semibold tracking-tight">
               Sign in to <span className="text-brand">DevPulse</span>
             </h1>
-            <p className="text-sm text-muted">Connect your services after signing in.</p>
+            <p className="text-[13px] text-muted">Connect your services after signing in.</p>
           </div>
           <form
             className="w-full"
