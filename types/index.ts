@@ -193,3 +193,9 @@ export interface NetlifyAccountInfo {
   type?: string;
   billingPeriod?: string;
 }
+
+export interface LogLine {
+  ts: number | null;
+  level: "info" | "warn" | "error";
+  text: string;
+}
