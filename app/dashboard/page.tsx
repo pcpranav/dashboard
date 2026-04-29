@@ -48,8 +48,8 @@ export default async function DashboardPage({
   return (
     <main className="mx-auto w-full max-w-6xl px-4 md:px-6">
       <Header email={session.user.email} />
-      <FactStrip connected={connected} />
       <FilterProvider range={range} q={q}>
+        <FactStrip connected={connected} />
         <FilterBar range={range} q={q} />
         <div className="flex flex-col gap-6 py-6 md:gap-8 md:py-8">
           <HeroCard connected={connected} />
