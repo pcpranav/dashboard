@@ -219,7 +219,7 @@ export function HeroCard({ connected }: { connected: ConnectedServices }) {
         <div>
           <div
             className={cn(
-              "mono text-[9px] uppercase tracking-[0.2em] font-medium",
+              "mono text-[9px] uppercase tracking-[0.15em] font-medium",
               topIssue?.severity === "danger" && "text-danger",
               topIssue?.severity === "warning" && "text-warning",
               !topIssue && "text-success",
