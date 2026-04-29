@@ -62,7 +62,7 @@ export function VercelCard({ connected }: { connected: boolean }) {
     <Card className="overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/[0.06] text-fg">
+          <div className="flex h-7 w-7 items-center justify-center border border-border bg-surface-alt text-fg">
             <VercelLogo />
           </div>
           <CardTitle>Vercel</CardTitle>
@@ -98,7 +98,7 @@ export function VercelCard({ connected }: { connected: boolean }) {
 
             {domains.data && domains.data.length > 0 && (
               <div className="space-y-1.5 pt-1">
-                <div className="flex items-center justify-between text-[11px] mono text-muted">
+                <div className="flex items-center justify-between text-[11px] text-muted">
                   <span>Domains</span>
                   <span className="text-fg">
                     {domains.data.length} total
@@ -143,20 +143,20 @@ export function VercelCard({ connected }: { connected: boolean }) {
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-border bg-white/[0.02] px-3 py-2">
-      <div className="text-[10px] mono uppercase tracking-widest text-muted">{label}</div>
-      <div className="mt-0.5 text-sm mono text-fg">{value}</div>
+    <div className="border border-border bg-surface px-3 py-2">
+      <div className="text-[10px] uppercase tracking-[0.15em] font-medium text-muted-soft">{label}</div>
+      <div className="mt-0.5 mono tnum text-sm text-fg">{value}</div>
     </div>
   );
 }
 
 function UsageRow({ label, current, pct }: { label: string; current: string; pct: number }) {
-  const ind = pct >= 90 ? "bg-danger" : pct >= 70 ? "bg-warning" : "bg-blue";
+  const ind = pct >= 90 ? "bg-danger" : pct >= 70 ? "bg-warning" : "bg-brand";
   return (
     <div className="space-y-1">
-      <div className="flex items-center justify-between text-[11px] mono text-muted">
-        <span>{label}</span>
-        <span className="text-fg">{current}</span>
+      <div className="flex items-center justify-between text-[11px]">
+        <span className="text-muted">{label}</span>
+        <span className="mono tnum text-fg">{current}</span>
       </div>
       <Progress value={pct} indicatorClassName={ind} />
     </div>
