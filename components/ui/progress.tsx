@@ -11,7 +11,7 @@ export function Progress({ value, className, indicatorClassName, ...props }: Pro
   return (
     <div
       className={cn(
-        "relative h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]",
+        "relative h-1.5 w-full overflow-hidden rounded-full bg-border",
         className,
       )}
       {...props}
@@ -19,7 +19,7 @@ export function Progress({ value, className, indicatorClassName, ...props }: Pro
       <div
         className={cn(
           "h-full rounded-full transition-all duration-500",
-          indicatorClassName ?? "bg-aurora",
+          indicatorClassName ?? "bg-brand",
         )}
         style={{ width: `${pct}%` }}
       />
