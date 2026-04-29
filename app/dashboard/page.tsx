@@ -4,6 +4,8 @@ import { getTokensRow, initSchema } from "@/lib/db";
 import type { ConnectedServices } from "@/types";
 import { Header } from "@/components/dashboard/Header";
 import { FactStrip } from "@/components/dashboard/FactStrip";
+import { FilterBar } from "@/components/dashboard/FilterBar";
+import { FilterProvider, isFilterRange, type FilterRange } from "@/components/dashboard/filter-context";
 import { HeroCard } from "@/components/dashboard/HeroCard";
 import { VercelCard } from "@/components/dashboard/VercelCard";
 import { NetlifyCard } from "@/components/dashboard/NetlifyCard";
@@ -12,9 +14,14 @@ import { LinkedProjects } from "@/components/dashboard/LinkedProjects";
 import { UsageBars } from "@/components/dashboard/UsageBars";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 
+// Force-dynamic: dashboard is user-specific; cannot cache statically
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: { range?: string; q?: string };
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/");
 
@@ -35,21 +42,27 @@ export default async function DashboardPage() {
     redirect("/onboarding");
   }
 
+  const range: FilterRange = isFilterRange(searchParams.range) ? searchParams.range : "7d";
+  const q = (searchParams.q ?? "").trim().toLowerCase().slice(0, 200);
+
   return (
     <main className="mx-auto w-full max-w-6xl px-4 md:px-6">
       <Header email={session.user.email} />
       <FactStrip connected={connected} />
-      <div className="flex flex-col gap-6 py-6 md:gap-8 md:py-8">
-        <HeroCard connected={connected} />
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <VercelCard connected={connected.vercel} />
-          <NetlifyCard connected={connected.netlify} />
-          <SupabaseCard connected={connected.supabase} />
+      <FilterProvider range={range} q={q}>
+        <FilterBar range={range} q={q} />
+        <div className="flex flex-col gap-6 py-6 md:gap-8 md:py-8">
+          <HeroCard connected={connected} />
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <VercelCard connected={connected.vercel} />
+            <NetlifyCard connected={connected.netlify} />
+            <SupabaseCard connected={connected.supabase} />
+          </div>
+          <LinkedProjects connected={connected} />
+          <UsageBars connected={connected} />
+          <ActivityFeed connected={connected} />
         </div>
-        <LinkedProjects connected={connected} />
-        <UsageBars connected={connected} />
-        <ActivityFeed connected={connected} />
-      </div>
+      </FilterProvider>
     </main>
   );
 }
