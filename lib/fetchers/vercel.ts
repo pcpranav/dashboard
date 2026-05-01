@@ -27,20 +27,46 @@ interface VercelProject {
   targets?: { production?: { alias?: string[] } };
 }
 
+async function fetchScopeIds(token: string): Promise<Array<string | null>> {
+  const teams = await fetchVercelTeams(token);
+  return [null, ...teams.map((t) => t.id)];
+}
+
+function withTeam(url: string, teamId: string | null): string {
+  if (!teamId) return url;
+  return url + (url.includes("?") ? "&" : "?") + `teamId=${encodeURIComponent(teamId)}`;
+}
+
 export async function fetchVercelProjects(token: string): Promise<ProjectData[]> {
-  const res = await fetch(`${BASE}/v9/projects?limit=100`, {
-    headers: headers(token),
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`vercel projects ${res.status}`);
-  const json = (await res.json()) as { projects: VercelProject[] };
-  return json.projects.map((p) => ({
-    id: p.id,
-    name: p.name,
-    domain: p.targets?.production?.alias?.[0] ?? "",
-    provider: "vercel" as const,
-    status: "active" as const,
-  }));
+  const scopes = await fetchScopeIds(token);
+  const results = await Promise.allSettled(
+    scopes.map(async (teamId) => {
+      const res = await fetch(withTeam(`${BASE}/v9/projects?limit=100`, teamId), {
+        headers: headers(token),
+        cache: "no-store",
+      });
+      if (!res.ok) throw new Error(`vercel projects ${res.status}`);
+      const json = (await res.json()) as { projects: VercelProject[] };
+      return json.projects;
+    }),
+  );
+  const seen = new Set<string>();
+  const merged: ProjectData[] = [];
+  for (const r of results) {
+    if (r.status !== "fulfilled") continue;
+    for (const p of r.value) {
+      if (seen.has(p.id)) continue;
+      seen.add(p.id);
+      merged.push({
+        id: p.id,
+        name: p.name,
+        domain: p.targets?.production?.alias?.[0] ?? "",
+        provider: "vercel" as const,
+        status: "active" as const,
+      });
+    }
+  }
+  return merged;
 }
 
 interface VercelDeployment {
@@ -99,22 +125,53 @@ function mapVercelDeployment(d: VercelDeployment): DeploymentData {
 }
 
 export async function fetchVercelDeployments(token: string, limit = 10): Promise<DeploymentData[]> {
-  const res = await fetch(`${BASE}/v6/deployments?limit=${limit}`, {
-    headers: headers(token),
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`vercel deployments ${res.status}`);
-  const json = (await res.json()) as { deployments: VercelDeployment[] };
-  return json.deployments.map(mapVercelDeployment);
+  const scopes = await fetchScopeIds(token);
+  const results = await Promise.allSettled(
+    scopes.map(async (teamId) => {
+      const res = await fetch(withTeam(`${BASE}/v6/deployments?limit=${limit}`, teamId), {
+        headers: headers(token),
+        cache: "no-store",
+      });
+      if (!res.ok) throw new Error(`vercel deployments ${res.status}`);
+      const json = (await res.json()) as { deployments: VercelDeployment[] };
+      return json.deployments;
+    }),
+  );
+  const seen = new Set<string>();
+  const merged: VercelDeployment[] = [];
+  for (const r of results) {
+    if (r.status !== "fulfilled") continue;
+    for (const d of r.value) {
+      if (seen.has(d.uid)) continue;
+      seen.add(d.uid);
+      merged.push(d);
+    }
+  }
+  merged.sort((a, b) => b.created - a.created);
+  return merged.slice(0, limit).map(mapVercelDeployment);
+}
+
+async function fetchOnSomeScope<T>(
+  token: string,
+  build: (teamId: string | null) => string,
+): Promise<T> {
+  const scopes = await fetchScopeIds(token);
+  let lastStatus = 0;
+  for (const teamId of scopes) {
+    const res = await fetch(build(teamId), { headers: headers(token), cache: "no-store" });
+    if (res.ok) return (await res.json()) as T;
+    lastStatus = res.status;
+    if (res.status !== 403 && res.status !== 404) {
+      throw new Error(`vercel request ${res.status}`);
+    }
+  }
+  throw new Error(`vercel request ${lastStatus || 404}`);
 }
 
 export async function fetchVercelDeployment(token: string, id: string): Promise<DeploymentData> {
-  const res = await fetch(`${BASE}/v13/deployments/${encodeURIComponent(id)}`, {
-    headers: headers(token),
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`vercel deployment ${res.status}`);
-  const raw = (await res.json()) as VercelDeployment;
+  const raw = await fetchOnSomeScope<VercelDeployment>(token, (teamId) =>
+    withTeam(`${BASE}/v13/deployments/${encodeURIComponent(id)}`, teamId),
+  );
   return mapVercelDeployment(raw);
 }
 
@@ -133,12 +190,9 @@ function inferLevel(text: string, type?: string): LogLine["level"] {
 }
 
 export async function fetchVercelDeployLogs(token: string, id: string): Promise<LogLine[]> {
-  const res = await fetch(
-    `${BASE}/v3/deployments/${encodeURIComponent(id)}/events?limit=1000`,
-    { headers: headers(token), cache: "no-store" },
+  const events = await fetchOnSomeScope<VercelEvent[]>(token, (teamId) =>
+    withTeam(`${BASE}/v3/deployments/${encodeURIComponent(id)}/events?limit=1000`, teamId),
   );
-  if (!res.ok) throw new Error(`vercel events ${res.status}`);
-  const events = (await res.json()) as VercelEvent[];
   const lines: LogLine[] = [];
   for (const e of events) {
     const text = e.payload?.text ?? e.text ?? "";
@@ -160,19 +214,35 @@ interface VercelDomain {
 }
 
 export async function fetchVercelDomains(token: string): Promise<DomainData[]> {
-  const res = await fetch(`${BASE}/v5/domains?limit=100`, {
-    headers: headers(token),
-    cache: "no-store",
-  });
-  if (!res.ok) return [];
-  const json = (await res.json()) as { domains: VercelDomain[] };
-  return json.domains.map((d) => ({
-    name: d.name,
-    expiresAt: d.expiresAt ? new Date(d.expiresAt).toISOString() : null,
-    boughtAt: d.boughtAt ? new Date(d.boughtAt).toISOString() : null,
-    verified: Boolean(d.verified),
-    provider: "vercel" as const,
-  }));
+  const scopes = await fetchScopeIds(token);
+  const results = await Promise.allSettled(
+    scopes.map(async (teamId) => {
+      const res = await fetch(withTeam(`${BASE}/v5/domains?limit=100`, teamId), {
+        headers: headers(token),
+        cache: "no-store",
+      });
+      if (!res.ok) return [] as VercelDomain[];
+      const json = (await res.json()) as { domains: VercelDomain[] };
+      return json.domains;
+    }),
+  );
+  const seen = new Set<string>();
+  const merged: DomainData[] = [];
+  for (const r of results) {
+    if (r.status !== "fulfilled") continue;
+    for (const d of r.value) {
+      if (seen.has(d.name)) continue;
+      seen.add(d.name);
+      merged.push({
+        name: d.name,
+        expiresAt: d.expiresAt ? new Date(d.expiresAt).toISOString() : null,
+        boughtAt: d.boughtAt ? new Date(d.boughtAt).toISOString() : null,
+        verified: Boolean(d.verified),
+        provider: "vercel" as const,
+      });
+    }
+  }
+  return merged;
 }
 
 interface VercelUsageResponse {
