@@ -288,6 +288,7 @@ function Footer() {
           <a href="#features" className="transition-colors hover:text-fg">Features</a>
           <a href="#services" className="transition-colors hover:text-fg">Services</a>
           <a href="#privacy" className="transition-colors hover:text-fg">Privacy</a>
+          <Link href="/about" className="transition-colors hover:text-fg">About</Link>
         </div>
         <div className="text-[11px] mono text-muted-soft">© 2026 DevPulse</div>
       </div>
